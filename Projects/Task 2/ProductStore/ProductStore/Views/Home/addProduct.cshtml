@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h2>Add a Product</h2>
+    Name: <input type="text" id="name" /></input><br />
+    Category: <input type="text" id="category" /></input><br />
+    Price: <input type="text" id="price" /></input><br />
+    <hr />
+    <input type="button" id="submit" value="Submit" />
+</body>
+</html>
+
+<script>
+    var uri = 'https://localhost:44395/api/v3/products';
+
+    $(document).ready(function () {
+        $("#submit").click(function (e) {
+            $.ajax({
+                type: "POST",
+                url: uri,
+                dataType: "json",
+                data: {
+                    Name: $("#name").val(),
+                    Category: $("#category").val(),
+                    Price: $("#price").val()
+                },
+                success: function (data) {
+                    alert("Success!")
+                    window.location.href = "Index"
+                },
+                error: function (xhr, status, error) {
+                    alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
+                }
+            });
+
+        });
+    });
+</script>

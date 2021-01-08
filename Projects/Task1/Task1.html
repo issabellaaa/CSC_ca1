@@ -1,0 +1,86 @@
+<html>
+<head>
+    <title>Task 1</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<style>
+    td {
+        border-style: solid;
+    }
+
+    th {
+        padding-right: 170px;
+    }
+</style>
+
+<body>
+    <h1>Weather Service API</h1>
+    <button type="button" class="btn btn-primary" id="submit">Get Weather</button>
+
+    <table cellpadding="0" cellspacing="0"
+           border="0" t id="dataTable">
+        <thead>
+            <tr>
+                <th>Area</th>
+                <th>Forecast</th>
+            </tr>
+        </thead>
+
+        <tbody id="dataTableBody"></tbody>
+    </table>
+
+    <div id="myData"></div>
+
+    <script>
+        $(document).ready(function () {
+            $("#submit").click(function (e) {
+                $.ajax({
+                    type: "GET",
+                    url: "https://api.data.gov.sg/v1/environment/2-hour-weather-forecast",
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        //appendData(data.items[0].forecasts);
+                        renderData(data.items[0].forecasts);
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Result: " + status + " " + error + " " + xhr.status + " " + xhr.statusText)
+                    }
+                });
+
+            });
+        });
+
+
+        function appendData(data) {
+            var maincontainer = document.getElementById("myData");
+            for (var i = 0; i < data.length; i++) {
+                var div = document.createElement("div");
+                div.innerHTML = 'Area Forecast : ' + data[i].area + ' ' + data[i].forecast;
+                maincontainer.appendChild(div);
+            }
+        }
+
+
+        function renderData(inData) {
+            $('#dataTableBody').html('');//Clear the <tbody> element first
+            let $cellElement = null;
+            let $rowElement = null;
+            for (var i = 0; i < inData.length; i++) {
+                let data = inData[i];
+
+                //Start --- Defining the row element to hold
+                $rowElement = $('<tr></tr>');
+                $cellElement = $(`<td>${data.area}</td>`);
+                $rowElement.append($cellElement);
+                $cellElement = $(`<td>${data.forecast}</td>`);
+                $rowElement.append($cellElement);
+                $('#dataTableBody').append($rowElement);//inserting a new row
+            }
+        }
+
+
+    </script>
+</body>
+</html>
