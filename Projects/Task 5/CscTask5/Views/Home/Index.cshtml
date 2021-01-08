@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="~/Scripts/jquery-3.3.1.js"></script>
+    @*<script src="//code.jquery.com/jquery-3.1.0.js"></script>*@
+    <link href="~/Content/mystyle.css" rel="stylesheet" />
+    <script src="~/Scripts/script.js"></script>
+    <script src="https://kit.fontawesome.com/941fd9859a.js" crossorigin="anonymous"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+</head>
+<body>
+    <div id="mask" class="mask">
+        <div id="loading" style="padding:100px; text-align:center; color:white">
+            <p>
+                <i class="fa fa-spinner fa-spin fa-10x" style="margin-right:5px;"></i>
+            </p>
+            <h3>Uploading to S3...</h3>
+        </div>
+    </div>
+
+    @*Main design*@
+    <br />
+    <h3>Upload images to AWS S3 Bucket</h3>
+    <br />
+    <div>
+        <input type="file" id="fileUpload" onchange="fileValidation()">
+    </div>
+    <br />
+    <div>
+        <button onclick="s3upload()">Upload Image</button>
+    </div>
+    <br />
+    <label for="file">Uploading progress  :  </label>
+    <progress id="file" value="0" max="100"></progress>
+    <hr />
+    <div id="Success"></div>
+    <br />
+    <div id="Image" Visible="false" runat="server" Height="100" Width="100"></div>
+    <br />
+    <div id="LongURL"></div>
+    <div id="ShortURL"></div>
+    
+</body>
+
+</html>
+<style>
+    .loading {
+        z-index: 3;
+    }
+
+    div.mask {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+        display: none;
+    }
+</style>
+
+<script>
+    // Bucket Configurations
+    var bucketName = 'talentsearch-s3';
+    var bucketRegion = 'us-east-1';
+    var IdentityPoolId = "us-east-1:a57310a4-9bc6-4195-9355-da6b3c75b6e4";
+
+    // Bit.ly access token
+    var accessToken = "d7f21aa6a80bde6187c5ffca1251bd24e360274c";
+
+    AWS.config.update({
+        region: bucketRegion,
+        credentials: new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: IdentityPoolId
+        })
+    });
+
+    var s3 = new AWS.S3({
+        apiVersion: '2006-03-01',
+        params: { Bucket: bucketName }
+    });
+</script>
+
+<script type="text/javascript">
+    function s3upload() {
+        var files = document.getElementById('fileUpload').files;
+        $('.mask').css("display", "block");
+        if (files) {
+            var file = files[0];
+            var fileName = file.name;
+            //var filePath = fileName;
+            var longUrl = 'https://' + bucketName + '.s3.amazonaws.com/' + fileName;
+            s3.upload({
+                Key: fileName,
+                ContentType: file.type,
+                Body: file,
+                ACL: 'public-read'
+            }, function (err, data) {
+                if (data !== null) {
+                    console.log(data);
+                    $('#Success').html("Successfully uploaded " + fileName + " to AWS S3 Bucket.");
+                    $('#LongURL').html("Long URL   :  <a href='" + longUrl + "'>" + longUrl + "</a>");
+                    //var idname = fileName.split('.');
+                    //var idName = idname[0];
+                    $.ajax({
+                        url: "https://api-ssl.bitly.com/v4/shorten",
+                        cache: false,
+                        dataType: "json",
+                        method: "POST",
+                        contentType: "application/json",
+                        tryCount: 0,
+                        retryLimit: 3,
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("Authorization", "Bearer " + accessToken);
+                            //$('#loadingtext').text("Getting short download link now...");
+                        },
+                        data: JSON.stringify({ "long_url": longUrl }),
+                        // In case of function failure, create a for loop to retry 3 times.
+                        // The error will be stated on the console in Inspect.
+                        error: function (xhr, textStatus, errorThrown) {
+                            console.log(textStatus);
+                            if (textStatus == 'error') {
+                                this.tryCount++;
+                                if (this.tryCount <= this.retryLimit) {
+                                    //try again
+                                    $.ajax(this);
+                                    return;
+                                }
+                                return;
+                            }
+                        }
+                    }).done(function (data) {
+                        $('.mask').css("display", "none");
+                        console.log(data);
+                        shortUrl = data.link;
+                        $('#ShortURL').html("Short URL  :  <a href='" + shortUrl + "'>" + shortUrl + "</a>");
+                        alert("Uploaded Successfully!");
+
+                        // Display image automatically
+                        var img = document.createElement("img");
+                        img.src = longUrl;
+                        var src = document.getElementById("Image");
+                        src.appendChild(img);
+
+                        //$(`#dl${idName}`).css("display", "block");
+                        //$(`#${idName}`).attr("href", data.link);
+                        //$(`#${idName}`).text(data.link);
+
+                    })
+                        .fail(function () {
+                            $('.mask').css("display", "none");
+                            alert("Get short link failed!");
+                        })
+
+                }
+                else {
+                    console.log(err);
+                    alert("Upload failed!");
+                }
+            }).on('httpUploadProgress', function (progress) {
+                var uploaded = parseInt((progress.loaded * 100) / progress.total);
+                $("progress").attr('value', uploaded);
+
+            });
+        }
+    }
+
+    function validateImage() {
+        var formData = new FormData();
+        var files = document.getElementById("fileUpload").files; // vv
+        //var file = document.getElementById('fileUpload').files[0];
+        formData.append("Filedata", files);
+        //var t = files.split('.').pop().toLowerCase();
+        console.log(files);
+        var t = files.split('.').pop();
+        if (t != "jpeg" && t != "jpg" && t != "png" && t != "bmp" && t != "gif") {
+            alert('Please select a valid image file');
+            document.getElementById("fileUpload").value = '';
+            return false;
+        }
+        if (files.size > 1024000) {
+            alert('Max Upload size is 1MB only');
+            document.getElementById("fileUpload").value = '';
+            return false;
+        }
+        return true;
+    }
+
+    function fileValidation() {
+        var fileInput = document.getElementById('fileUpload');
+
+        var filePath = fileInput.value;
+
+        // Allowing file type 
+        var allowedExtensions =
+            /(\.jpg|\.jpeg|\.png|\.gif)$/i;
+
+        if (!allowedExtensions.exec(filePath)) {
+            alert('Please select a valid image file');
+            fileInput.value = '';
+            return false;
+        }
+        if (fileInput.size > 1024000) {
+            alert('Max Upload size is 1MB only');
+            fileInput.value = '';
+            return false;
+        }
+           return true;
+        
+    }
+</script>
+
+@*<script>
+    var img = document.createElement("img");
+
+    img.src = longUrl;
+    var src = document.getElementById("Image");
+
+    src.appendChild(img);
+</script>*@
+
