@@ -1,0 +1,120 @@
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><h4 id="get-products">Get Products</h4>
+<p><code>GET</code> api/v3/products</p>
+<p><strong>Return</strong>:</p>
+<ul>
+<li>Array of products</li>
+</ul>
+<p><strong>Response(s)</strong>:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attribute">Id</span>: int,
+    Name: string,
+    Category: <span class="hljs-built_in">string</span>(100),
+    Price: decimal
+}
+</code></pre>
+<p><code>GET</code> api/v3/products/{id:int:min(1)}</p>
+<p><strong>Return</strong>:</p>
+<ul>
+<li>Product Object</li>
+</ul>
+<p><strong>Response(s)</strong>:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attribute">Id</span>: int,
+    Name: string,
+    Category: <span class="hljs-built_in">string</span>(100),
+    Price: decimal
+}
+</code></pre>
+<p><code>GET</code> api/v3/products, Name</p>
+<p><strong>Return</strong>:</p>
+<ul>
+<li>Array of products of the same category</li>
+</ul>
+<p><strong>Response(s)</strong>:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-attribute">Id</span>: int,
+    Name: string,
+    Category: <span class="hljs-built_in">string</span>(100),
+    Price: decimal
+}
+</code></pre>
+<p><code>POST</code> api/v3/products</p>
+<p><strong>Argument(s)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Type</th>
+<th>Rule(s)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td><code>string</code></td>
+<td>Required</td>
+<td>Name of <code>Product</code></td>
+</tr>
+<tr>
+<td>Category</td>
+<td><code>string</code></td>
+<td>length(0, 100), Required</td>
+<td>Category of <code>Product</code></td>
+</tr>
+<tr>
+<td>Price</td>
+<td><code>decimal</code></td>
+<td>price</td>
+<td>Price of <code>Product</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Return</strong>:</p>
+<ul>
+<li>HTTP <strong>201 Created</strong></li>
+</ul>
+<p><strong>Error(s)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>invalid_price</td>
+<td>400</td>
+<td>Price needs to be a number</td>
+</tr>
+<tr>
+<td>invalid price</td>
+<td>400</td>
+<td>Redundant dollar sign added in price input</td>
+</tr>
+</tbody>
+</table>
+<p><code>PUT</code> api/v3/products/{id:int}</p>
+<p><strong>Description</strong></p>
+<ul>
+<li>Update the product with the new name, category and price</li>
+</ul>
+<p><strong>Return</strong></p>
+<ul>
+<li>HTTP <strong>204 No Content</strong></li>
+</ul>
+<p><code>DELETE</code> api/v3/products/{id:int}
+<strong> Description</strong></p>
+<ul>
+<li>Delete the product with using its Id</li>
+</ul>
+<p><strong>Return</strong></p>
+<ul>
+<li>HTTP <strong>204 No Content</strong></li>
+</ul>
+</body></html>
